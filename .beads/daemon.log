@@ -2551,3 +2551,52 @@ time=2026-02-24T20:50:28.780Z level=INFO msg="Git ref change detected" path=/hom
 time=2026-02-24T20:50:28.814Z level=INFO msg="Mutation detected" type=status issue_id=imagen-lko
 time=2026-02-24T20:50:28.869Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
 time=2026-02-24T20:50:28.869Z level=INFO msg="File change detected" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:29.317Z level=INFO msg="Export triggered by mutation events"
+time=2026-02-24T20:50:29.318Z level=INFO msg=Starting mode=export
+time=2026-02-24T20:50:29.318Z level=INFO msg="JSONL changed externally, importing before export"
+time=2026-02-24T20:50:29.325Z level=INFO msg="Auto-import complete, proceeding with export"
+time=2026-02-24T20:50:29.332Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:29.337Z level=INFO msg="Exported to JSONL"
+time=2026-02-24T20:50:29.337Z level=INFO msg="Export complete"
+time=2026-02-24T20:50:30.336Z level=INFO msg="Import triggered by file change"
+time=2026-02-24T20:50:30.337Z level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-24T20:50:31.507Z level=INFO msg="Pulled from remote"
+time=2026-02-24T20:50:31.507Z level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-24T20:50:31.507Z level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-24T20:50:34.333Z level=INFO msg="Mutation detected" type=status issue_id=imagen-lko
+time=2026-02-24T20:50:34.421Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:34.421Z level=INFO msg="File change detected" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:34.833Z level=INFO msg="Export triggered by mutation events"
+time=2026-02-24T20:50:34.858Z level=INFO msg=Starting mode=export
+time=2026-02-24T20:50:34.863Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:34.876Z level=INFO msg="Exported to JSONL"
+time=2026-02-24T20:50:34.876Z level=INFO msg="Export complete"
+time=2026-02-24T20:50:35.864Z level=INFO msg="Import triggered by file change"
+time=2026-02-24T20:50:35.865Z level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-24T20:50:35.870Z level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:35.870Z level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-24T20:50:35.870Z level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-24T20:50:37.013Z level=INFO msg="Pulled from remote"
+time=2026-02-24T20:50:37.013Z level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-24T20:50:37.013Z level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-24T20:50:41.586Z level=INFO msg="Mutation detected" type=status issue_id=imagen-sxh
+time=2026-02-24T20:50:42.087Z level=INFO msg="Export triggered by mutation events"
+time=2026-02-24T20:50:42.088Z level=INFO msg=Starting mode=export
+time=2026-02-24T20:50:42.094Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:42.094Z level=INFO msg="File change detected" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:42.096Z level=INFO msg="Exported to JSONL"
+time=2026-02-24T20:50:42.096Z level=INFO msg="Export complete"
+time=2026-02-24T20:50:43.095Z level=INFO msg="Import triggered by file change"
+time=2026-02-24T20:50:43.096Z level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-24T20:50:43.098Z level=INFO msg="WARNING: Uncommitted local changes detected" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:50:43.098Z level=INFO msg="   Pulling from remote may overwrite local unpushed changes."
+time=2026-02-24T20:50:43.098Z level=INFO msg="   Consider running 'bd sync' to commit and push your changes first."
+time=2026-02-24T20:50:44.247Z level=INFO msg="Pulled from remote"
+time=2026-02-24T20:50:44.247Z level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-24T20:50:44.247Z level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
+time=2026-02-24T20:50:44.253Z level=INFO msg="Imported from JSONL"
+time=2026-02-24T20:50:44.254Z level=INFO msg="Auto-import complete"
+time=2026-02-24T20:56:49.982Z level=INFO msg="Git ref change detected" path=/home/admin/imagen/.git/refs/heads/main.lock
+time=2026-02-24T20:56:50.012Z level=INFO msg="Mutation detected" type=status issue_id=imagen-sxh
+time=2026-02-24T20:56:50.072Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:56:50.072Z level=INFO msg="File change detected" path=/home/admin/imagen/.beads/issues.jsonl
