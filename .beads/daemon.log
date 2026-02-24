@@ -1170,3 +1170,11 @@ time=2026-02-24T19:05:46.318Z level=INFO msg="🔍 Checking JSONL content hash A
 time=2026-02-24T19:05:46.318Z level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
 time=2026-02-24T19:05:46.324Z level=INFO msg="Imported from JSONL"
 time=2026-02-24T19:05:46.325Z level=INFO msg="Auto-import complete"
+time=2026-02-24T19:05:48.146Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T19:05:48.146Z level=INFO msg="File change detected" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T19:05:48.151Z level=INFO msg="Git ref change detected" path=/home/admin/imagen/.git/refs/heads/main.lock
+time=2026-02-24T19:05:49.155Z level=INFO msg="Import triggered by file change"
+time=2026-02-24T19:05:49.156Z level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-24T19:05:50.324Z level=INFO msg="Pulled from remote"
+time=2026-02-24T19:05:50.324Z level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-24T19:05:50.325Z level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
