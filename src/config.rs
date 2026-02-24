@@ -13,7 +13,6 @@ pub struct Config {
 
     /// Default parameter values (used when CLI flags are at their defaults).
     #[serde(default)]
-    #[allow(dead_code)] // Wired in Phase 2 when config defaults override CLI defaults
     pub defaults: DefaultsConfig,
 }
 
@@ -26,30 +25,52 @@ pub struct KeysConfig {
     pub openai: Option<String>,
 }
 
+fn default_model() -> String {
+    "nano-banana".to_string()
+}
+fn default_aspect_ratio() -> String {
+    "1:1".to_string()
+}
+fn default_size() -> String {
+    "1K".to_string()
+}
+fn default_quality() -> String {
+    "auto".to_string()
+}
+fn default_format() -> String {
+    "jpeg".to_string()
+}
+
 /// Default parameter values from config file.
+///
+/// Each field is independently optional: omitting a field in `[defaults]` keeps the built-in CLI default.
 #[derive(Debug, Deserialize)]
-#[allow(dead_code)] // Fields used in Phase 2 when config defaults override CLI defaults
 pub struct DefaultsConfig {
     /// Default model name.
+    #[serde(default = "default_model")]
     pub model: String,
     /// Default aspect ratio.
+    #[serde(default = "default_aspect_ratio")]
     pub aspect_ratio: String,
     /// Default image size.
+    #[serde(default = "default_size")]
     pub size: String,
     /// Default quality.
+    #[serde(default = "default_quality")]
     pub quality: String,
     /// Default output format.
+    #[serde(default = "default_format")]
     pub format: String,
 }
 
 impl Default for DefaultsConfig {
     fn default() -> Self {
         Self {
-            model: "nano-banana".to_string(),
-            aspect_ratio: "1:1".to_string(),
-            size: "1K".to_string(),
-            quality: "auto".to_string(),
-            format: "jpeg".to_string(),
+            model: default_model(),
+            aspect_ratio: default_aspect_ratio(),
+            size: default_size(),
+            quality: default_quality(),
+            format: default_format(),
         }
     }
 }
