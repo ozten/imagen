@@ -2162,3 +2162,7 @@ time=2026-02-24T20:38:38.450Z level=INFO msg="🔍 Checking JSONL content hash A
 time=2026-02-24T20:38:38.451Z level=INFO msg="JSONL content changed, proceeding with operation..." mode=auto-import
 time=2026-02-24T20:38:38.455Z level=INFO msg="Imported from JSONL"
 time=2026-02-24T20:38:38.456Z level=INFO msg="Auto-import complete"
+time=2026-02-24T20:38:39.925Z level=INFO msg="Git ref change detected" path=/home/admin/imagen/.git/refs/heads/main.lock
+time=2026-02-24T20:38:39.966Z level=INFO msg="Mutation detected" type=status issue_id=imagen-5h1
+time=2026-02-24T20:38:40.020Z level=INFO msg="JSONL file created" path=/home/admin/imagen/.beads/issues.jsonl
+time=2026-02-24T20:38:40.020Z level=INFO msg="File change detected" path=/home/admin/imagen/.beads/issues.jsonl
