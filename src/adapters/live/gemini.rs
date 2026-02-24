@@ -36,7 +36,7 @@ impl ImageGenerator for GeminiGenerator {
                     "parts": [{"text": request.prompt}]
                 }],
                 "generationConfig": {
-                    "responseModalities": ["TEXT", "IMAGE"],
+                    "responseModalities": ["IMAGE"],
                     "imageConfig": {
                         "aspectRatio": request.aspect_ratio,
                         "imageSize": request.size,
