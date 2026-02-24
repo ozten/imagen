@@ -44,7 +44,6 @@ impl ImageGenerator for OpenAiGenerator {
                 "size": size,
                 "quality": request.quality,
                 "output_format": request.format,
-                "response_format": "b64_json",
             });
 
             let response = self
