@@ -14,6 +14,17 @@ To install a specific version:
 IMAGEN_VERSION=0.1.0 curl -fsSL https://raw.githubusercontent.com/ozten/imagen/main/scripts/install.sh | bash
 ```
 
+## Setup
+
+Set an API key for at least one provider:
+
+```bash
+export GEMINI_API_KEY="your-gemini-api-key"
+export OPENAI_API_KEY="your-openai-api-key"
+```
+
+Keys can also be stored in `~/.config/imagen/config.toml` (see [Configuration](#configuration)).
+
 ## Quick Start
 
 Generate an image from a prompt:
