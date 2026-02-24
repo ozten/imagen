@@ -1,0 +1,14 @@
+{
+  "pid": 953585,
+  "state": "session_running",
+  "iteration": 4,
+  "max_iterations": 0,
+  "global_iteration": 5,
+  "output_file": "",
+  "output_bytes": 0,
+  "session_start": null,
+  "last_update": "2026-02-24T18:55:51.758427617Z",
+  "last_completed_iteration": null,
+  "last_committed": false,
+  "consecutive_rate_limits": 0
+}

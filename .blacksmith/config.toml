@@ -1,0 +1,28 @@
+# Blacksmith configuration
+# See documentation for all available options.
+
+[agent]
+command = "claude"
+args = ["-p", "{prompt}", "--dangerously-skip-permissions", "--verbose", "--output-format", "stream-json"]
+prompt_via = "arg"
+
+[session]
+max_iterations = 100
+
+[storage]
+compress_after = 5
+retention = "last-50"
+
+[workers]
+max = 1
+
+[improvements]
+analyze_every = 5       # Spawn analysis agent every N completed sessions (0 = disabled)
+analyze_sessions = 1    # Number of recent sessions to include in the analysis prompt
+backlog_threshold = 10  # Skip analysis if open improvement count exceeds this (0 = disabled)
+
+[quality_gates]
+check = ["cargo check --release"]
+test = ["cargo test --release"]
+lint = ["cargo clippy --fix --allow-dirty"]
+format = ["cargo fmt --check"]
