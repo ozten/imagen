@@ -33,3 +33,6 @@ target/
 .claude/
 .spec-cache/
 .speck/
+
+# Generated images
+a-cat-*.jpg

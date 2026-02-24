@@ -275,3 +275,132 @@ Before closing a task, run these commands and ensure they pass:
 - Always use `blacksmith finish` to close out — do NOT manually run git add/commit/push/bd close/bd sync
 - **NEVER call `bd close` directly** — always go through `blacksmith finish` which enforces quality gates
 - **EFFICIENCY**: Re-read Rules A, B, C above. Every text-only turn and every sequential-when-parallel tool call wastes your limited turn budget. Aim for 5+ parallel turns per session and 0 narration-only turns.
+
+<!-- Promoted from R1 [prompt] -->
+- In PROMPT.md under ## Execution Protocol step 3 (Implement), add after 'Complete the task fully': 'CRITICAL: If after bd show you determine acceptance criteria are already satisfied by prior work, do NOT write a progress entry yet. Skip to step 4 immediately and run ALL commands in the ## Verify section of the bead. Only after every verify command passes should you record progress and close. Skipping verify on a pre-satisfied bead is a session failure — as seen when a session claimed done but missed a required test fixture.'
+
+<!-- Promoted from R2 [prompt] -->
+- In PROMPT.md under ## Execution Protocol, add after step 2 (Understand) a new sub-step 2b: '**2b. Pre-satisfied check**: If all acceptance criteria appear already met by prior sessions work, take the PRE-SATISFIED PATH: do NOT read any source files, do NOT write any code. Skip step 3 entirely. Jump to step 4a (Verify section). This avoids wasting turns on implementation exploration when nothing needs to be built.'
+
+<!-- Promoted from R3 [cost] -->
+- In PROMPT.md under step 4b (Code quality gates), add: 'If you took the pre-satisfied path (zero files modified this session), skip cargo clippy --fix --allow-dirty since there is nothing to fix. Run only: cargo test --release and cargo fmt --check. This saves 1-2 turns per trivial session and avoids running a mutation pass with nothing to mutate.'
+
+<!-- Promoted from R4 [prompt] -->
+- In PROMPT.md ## Context Loading section, add after 'do NOT re-explore the codebase': '(If MEMORY.md does not exist, skip it — do NOT fall back to ls, explore agents, or re-reading known files. Proceed directly to step 1.)'
+
+<!-- Promoted from R5 [prompt] -->
+- In PROMPT.md under step 4a (Bead-specific verification), add after 'execute those exact steps': 'If the ## Verify section lists multiple independent commands (e.g. cargo test AND a curl check), emit all of them as parallel Bash calls in ONE turn per Rule A — do not run them sequentially.'
+
+<!-- Promoted from R6 [prompt] -->
+- In PROMPT.md under '### Marking a Failed Attempt', change the bd update example from: '--notes="[FAILED-ATTEMPT] <YYYY-MM-DD> <reason>"' to: '--notes="[FAILED-ATTEMPT] <YYYY-MM-DD> <reason>: <first 2 lines of the actual error>"'. This helps future sessions (2+ failures path) diagnose root cause instead of only knowing the category label.
+
+<!-- Promoted from R7 [prompt] -->
+- In PROMPT.md line 11, change '- Session start: `bd ready` + `blacksmith progress show --bead-id <id>` → ONE turn, TWO tool calls' to '- Session start: `bd ready` + `Read MEMORY.md` → ONE turn, TWO tool calls'. Also update line 37: change 'Run `bd ready` AND `blacksmith progress show --bead-id <id>` in the SAME turn (Rule A — two parallel tool calls)' to 'Run `bd ready` AND `Read MEMORY.md` in the SAME turn (Rule A — two parallel tool calls). Then once you have the bead ID, run `bd show <id>` AND `blacksmith progress show --bead-id <id>` in the SAME turn.' Rationale: blacksmith progress show requires the bead ID from bd ready, so they cannot be emitted in one turn; Read MEMORY.md has no such dependency.
+
+<!-- Promoted from R9 [prompt] -->
+- In PROMPT.md under '## Context Loading', after step 1 ('Run bd ready AND Read MEMORY.md in the SAME turn'), add step 1b: '1b. Once `bd ready` returns the bead ID, immediately run `bd show <id>` AND `blacksmith progress show --bead-id <id>` in the SAME turn (Rule A — these are independent of each other). Do NOT run them in separate turns.' This creates a concrete two-step bootstrap that gives agents two forced parallel opportunities at session start, rather than one broken example.
+
+<!-- Promoted from R10 [prompt] -->
+- In PROMPT.md line 14, replace '- Session end: `Bash(cargo clippy --fix --allow-dirty)` + `Bash(cargo test --release)` → ONE turn (if they don\'t depend on each other\'s output)' with '- Integration check (step 4c): `Bash(grep -r "fn_name" src/)` + `Bash(grep -r "struct_name" tests/)` → ONE turn (independent search calls)'. Rationale: cargo clippy --fix modifies source files; cargo test reads those same files, so they are NOT parallel-safe. Keeping this wrong example causes agents to correctly detect the contradiction and skip all parallelism.
+
+<!-- Promoted from R11 [prompt] -->
+- In PROMPT.md lines 86-90, replace the comment '# Then in ONE turn with TWO parallel Bash calls:' with '# Then sequentially (clippy modifies files that fmt reads):'. Change the two commands on separate lines to show them as sequential, not parallel. Rationale: cargo clippy --fix --allow-dirty writes changes to source files; cargo fmt --check then reads those same files to verify formatting. Running them in parallel risks fmt reading partially-modified files and producing incorrect results.
+
+<!-- Promoted from R12 [prompt] -->
+- In PROMPT.md, add to the Turn Budget (R1) section after the 'Turns 1-55' bullet: '**Turn 10 checkpoint**: Count your parallel turns so far (turns where you emitted 2+ tool calls in one message). If the count is 0, you are violating Rule A — immediately re-read Rule A and make your next turn emit at least 2 parallel tool calls. A session that reaches turn 10 with zero parallel calls will almost certainly finish with zero parallel calls.'
+
+<!-- Promoted from R13 [prompt] -->
+- Add to PROMPT.md Step 3 (Implement), after 'Only read files you need to modify': '**Batch all file reads in ONE turn (Rule A)**: From the bead description, identify ALL source files you will need upfront. Emit ALL Read calls in a SINGLE turn — never read files one at a time sequentially.'
+
+<!-- Promoted from R14 [prompt] -->
+- Change PROMPT.md Steps 1-2 to merge them into a single parallel turn: After bd ready resolves the bead ID, emit in ONE turn: `bd update <id> --status in_progress` + `bd show <id>` + `blacksmith progress show --bead-id <id>` (THREE parallel tool calls). Remove the separate Step 1 and Step 2 headings and replace with: '1. Run `bd ready`, then in ONE turn: `bd update <id> --status in_progress` + `bd show <id>` + `blacksmith progress show --bead-id <id>`'
+
+<!-- Promoted from R15 [prompt] -->
+- Add inline Rule B reminders at three transition points in PROMPT.md: (1) At Step 3 header add: '(Rule B: every narration message MUST include a tool call — never emit text-only turns)'; (2) At Step 4 Verify header add the same reminder; (3) At Step 5 Finish header add: '(Rule B: include the blacksmith commands as tool calls in the same message as any narration)'. These hotspots account for 5-8 wasted text-only turns per session.'
+
+<!-- Promoted from R16 [prompt] -->
+- Remove the '## Verification' section at the end of PROMPT.md (lines 168-174: 'Before closing a task, run these commands...cargo test, clippy, fmt'). Replace with a one-line note: '## Verification\nAll quality gates are run automatically by `blacksmith finish`. Do not run them manually — Step 4b and blacksmith finish handle this.' Rationale: agents currently run cargo test+clippy+fmt in Step 4b, then again as the standalone Verification section, then blacksmith finish runs them a third time. This triple-execution wastes 3-4 turns per session.
+
+<!-- Promoted from R17 [prompt] -->
+- In PROMPT.md ## Turn Budget section, line that reads 'Run the full test suite + `lint:fix` + `analyze`' — replace with: 'Run `cargo test --release`, then call `blacksmith finish` which handles lint and format.' The commands `lint:fix` and `analyze` do not exist in this Rust project and will confuse agents in the wrap-up phase (turns 56-65) when they try to run them and get errors.
+
+<!-- Promoted from R18 [prompt] -->
+- Add to PROMPT.md immediately before Rule A section: '**Turn 1 Rule**: Your very first message MUST include a tool call — emit `bd ready` (and optionally `Read MEMORY.md` in parallel) as turn 1. Do NOT write any introductory text before your first tool call. A text-only turn 1 is an immediate Rule B violation and sets a pattern of narration-first that persists all session.'
+
+<!-- Promoted from R19 [prompt] -->
+- Add to PROMPT.md under 'Marking a Failed Attempt': 'After marking the failure, always exit via the standard finish sequence: (1) `blacksmith progress add --bead-id <id> --stdin` with your failure summary, (2) `blacksmith finish <id>` — this handles git sync and session cleanup even when nothing was committed. Do NOT exit by just stopping — always call blacksmith finish.'
+
+<!-- Promoted from R20 [cost] -->
+- Add to PROMPT.md Step 3 (Implement), before the first bullet: '**Prohibited single-tool turns** (each wastes 1 turn from your budget):\n- Do NOT run `cargo check` alone — `cargo test --release` already compiles everything.\n- Do NOT run `ls`, `find`, or bare `Glob` to explore directories — the project structure is in MEMORY.md and AGENTS.md.\nIf you catch yourself about to run one of these alone, combine it with another necessary call (Rule A) or skip it entirely.'
+
+<!-- Promoted from R21 [cost] -->
+- Add to PROMPT.md ## CRITICAL Execution Efficiency Rules section after Rule B: 'Rule D: Do NOT re-read the same file multiple times with incrementally refined scripts. When extracting data from a file (e.g., a session JSONL), write ONE comprehensive script that extracts ALL needed metrics in a single Bash call. Iteratively refining and re-running a script against the same file wastes one turn per iteration.'
+
+<!-- Promoted from R22 [prompt] -->
+- Add to PROMPT.md Rule B section, after the existing WRONG/RIGHT example: 'WRONG: "Now I have enough data. Let me synthesize my findings." (text only, no tool call) → action in next turn. RIGHT: Synthesize findings AND emit the first resulting tool call (e.g., blacksmith improve add) in ONE message. Analysis/thinking never justifies a text-only turn.'
+
+<!-- Promoted from R23 [prompt] -->
+- Add to PROMPT.md ## Improvement Recording section, before 'Record improvements as you work': '**Rule A applies here too**: When filing 2+ improvements in one session, emit ALL `blacksmith improve add` calls in ONE parallel turn — they are independent of each other.'
+
+<!-- Promoted from R24 [prompt] -->
+- Add to PROMPT.md Rule A, after the mandatory parallel patterns list: '**Look-ahead scan**: Before emitting ANY single tool call, ask: "Will I need another independent call in the next 2 turns?" If yes, emit BOTH now in one turn. Never defer an independent call you already know you need.'
+
+<!-- Promoted from R25 [prompt] -->
+- Add to PROMPT.md Rule A mandatory parallel patterns list (after 'Multiple greps' line): '- Running independent test subsets: `cargo test --release --filter suite_a` + `cargo test --release --filter suite_b` → ONE turn'
+
+<!-- Promoted from R26 [prompt] -->
+- Add to PROMPT.md ## Context Loading or ## Important section: 'When reading session .jsonl files (.blacksmith/sessions/*.jsonl), NEVER use the Read tool — it will fail on files >25000 tokens. Always use Bash+python3: python3 -c "import json; lines=[json.loads(l) for l in open(\".blacksmith/sessions/N.jsonl\")]; ..."'
+
+<!-- Promoted from R27 [prompt] -->
+- Add to PROMPT.md Step 5 (Finish) or ## Improvement Recording section, after the bd create example: 'Note: valid --type values for bd create are: task, bug, feature. Do NOT use --type process — it is invalid and will cause an error.'
+
+<!-- Promoted from R28 [prompt] -->
+- Add to PROMPT.md ## Improvement Recording section, after existing examples: 'WRONG (Rule B violation): emit text "Now creating beads..." as a standalone turn, then call bd create in the next turn. RIGHT: include narration text AND the first bd create call in the SAME turn. Never emit a standalone "Now creating beads" or "Now filing improvements" message.'
+
+<!-- Promoted from R29 [prompt] -->
+- Add to PROMPT.md Improvement Recording section: 'When reviewing open improvements, emit ALL blacksmith improve promote <REF> and blacksmith improve dismiss <REF> calls in ONE parallel turn — they are completely independent.'
+
+<!-- Promoted from R30 [prompt] -->
+- Add to PROMPT.md Failed-Attempt Detection section step 2: 'Emit ALL bd create <sub-bead> calls in ONE parallel turn — they are independent of each other. Example: emit bd create for sub-bead-A, bd create for sub-bead-B, and bd create for sub-bead-C in the same turn.'
+
+<!-- Promoted from R31 [prompt] -->
+- Add to PROMPT.md Failed-Attempt Detection section step 2: 'Always include --design flag: bd create --type feature --priority 1 "<title>" --design "<description of what this sub-bead should accomplish and why>". Beads without descriptions lack context and generate warnings.'
+
+<!-- Promoted from R32 [prompt] -->
+- Add new section '## Analysis Session Workflow' to PROMPT.md (after Rule C): 'If the assigned task is a self-improvement analysis session, follow these parallel patterns: Turn 1: batch Bash(cat session.jsonl | python3 all_metrics.py) + Bash(blacksmith improve list) + Read PROMPT.md in ONE turn (THREE parallel calls). All blacksmith improve add calls MUST be batched in ONE parallel turn. All bd create calls MUST be batched in ONE parallel turn. Never run multiple incremental python3 scripts on the same session file.'
+
+<!-- Promoted from R33 [cost] -->
+- Add to PROMPT.md Analysis Session Workflow section: 'Write ONE comprehensive python3 analysis script that extracts ALL needed metrics (tool_call counts, parallel turn counts, narration-only turns, tool name breakdown, thinking-only turns) in a SINGLE Bash call. Example pattern: cat session.jsonl | python3 -c "import sys,json; turns=[json.loads(l) for l in sys.stdin]; tool_turns=sum(1 for t in turns if t.get(type)==assistant and any(c.get(type)==tool_use for c in t.get(message,{}).get(content,[]))); print(tool_turns)". Never run 5+ separate python3 scripts on the same .jsonl file in separate turns.'
+
+<!-- Promoted from R35 [prompt] -->
+- Add to PROMPT.md Analysis Session Workflow section: 'Session files are at .blacksmith/sessions/<N>.jsonl — NOT .beads/sessions/. Use this exact path in python3 scripts. Example: open("/home/admin/imagen/.blacksmith/sessions/{session_id}.jsonl"). Never try .beads/sessions/ first.'
+
+<!-- Promoted from R36 [prompt] -->
+- Add to PROMPT.md Analysis Session Workflow section: 'Run `blacksmith improve list` WITHOUT any `| head -N` truncation — always use the full output to review ALL open improvements. Truncating at 60 lines risks missing open improvements and filing duplicates.'
+
+<!-- Promoted from R37 [prompt] -->
+- Add to PROMPT.md ## Context Loading section, before step 1: '**Analysis sessions only:** Skip this entire section. The analysis prompt provides all needed context. Do NOT run `bd ready`, do NOT read MEMORY.md. Proceed directly to reviewing open improvements.'
+
+<!-- Promoted from R38 [cost] -->
+- Add to PROMPT.md ## Improvement Recording section: '**Analysis sessions**: Do NOT read PROMPT.md to assess open improvements. The `blacksmith improve list` output already reflects current prompt state. Only read PROMPT.md when writing the `--body` for a specific improvement that requires checking exact current text — and only ONE targeted read, not exploratory head/wc-l calls.'
+
+<!-- Promoted from R39 [prompt] -->
+- Add to PROMPT.md ## Rules section (after Rule B): 'Rule C — No synthesis turns: After receiving ANY tool result, your next turn MUST include at least one tool call, unless you are delivering the final session answer. Never insert a synthesis, analysis, or summary turn between consecutive tool calls. Anti-pattern: running Bash, then a text-only turn summarizing results, then another Bash. Pattern: run Bash, then immediately run next Bash in the same response or the following turn.'
+
+<!-- Promoted from R40 [prompt] -->
+- In PROMPT.md ## Analysis Session section, Step 1 (Close resolved improvements), change the instruction to: 'For each open improvement, check whether the PROBLEM BEHAVIOR no longer appears in recent session data. RESOLVED means: the violation is absent from current session metrics. NOT RESOLVED means: you cannot confirm the behavior stopped. DO NOT read PROMPT.md to check if the fix was applied — that wastes 2-3 turns. Judge solely from tool call patterns and session metrics.'
+
+<!-- Promoted from R41 [prompt] -->
+- In PROMPT.md ## Analysis Session section, Step 5 (Create beads for approved edits), add after the bd create example: 'CRITICAL: Count your filed improvements. Emit exactly that many bd create calls simultaneously in ONE turn. Never create beads one at a time. If you filed 2 improvements, emit 2 bd create calls in parallel. A missing bead = a missing implementation.'
+
+<!-- Promoted from R42 [cost] -->
+- In PROMPT.md ## Analysis Session section, add at top of Step 1: 'SKIP memory reads: Do NOT read MEMORY.md or PROMPT.md. All needed context (session metrics, open improvements) is provided directly in this task prompt. Reading MEMORY.md wastes a turn and the file may not exist.'
+
+<!-- Promoted from R43 [prompt] -->
+- In PROMPT.md ## Analysis Session section, add after opening paragraph: 'Rule A applies here: every turn must batch all independent calls. Minimum parallel patterns: (1) python3 metrics extraction + blacksmith improve list in ONE turn, (2) all blacksmith improve add calls in ONE turn, (3) all bd create calls in ONE turn, (4) git add + commit in ONE turn. A session with 0 parallel turns has violated Rule A on every possible turn.'
+
+<!-- Promoted from R44 [prompt] -->
+- In PROMPT.md ## Analysis Session section, add at the very top as a CRITICAL callout: 'Turn 1 MUST be tool calls: emit python3 comprehensive session parse script AND `blacksmith improve list` in ONE parallel turn. Turn 1 narration is a Rule A violation. Session 22 wasted Turn 1 with empty narration, delaying data gathering by 8 turns.'
+
+<!-- Promoted from R45 [cost] -->
+- In PROMPT.md ## Analysis Session section, Step 2, add a concrete python3 template that parses .blacksmith/sessions/<N>.jsonl in ONE pass and extracts: total messages, assistant turns, tool-call turns, narration-only turns, narration ratio, parallel-tool turns (turns with >1 tool_use block), tool_calls_by_name dict, and first 100 chars of each narration. Prevents the 5-7 incremental re-read scripts pattern seen in sessions 21 and 22 (wastes 4-6 turns and bloats context with repeated tool results).
