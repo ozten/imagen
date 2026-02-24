@@ -85,25 +85,43 @@ async fn run(cli: Cli) -> Result<(), error::ImageError> {
 
     // Create context based on mode (live / recording / replaying)
     let replay_path = std::env::var("IMAGEN_REPLAY").ok();
-    let is_recording = std::env::var("IMAGEN_REC").is_ok_and(|v| v == "true" || v == "1");
+    let record_val = std::env::var("IMAGEN_RECORD").ok();
+    let cassette_path = record_val.as_deref().and_then(|v| match v {
+        "true" | "1" => None,
+        path => Some(std::path::PathBuf::from(path)),
+    });
 
     let (ctx, recording_session) = if let Some(ref cassette_path) = replay_path {
         if cli.verbose {
             eprintln!("Replaying from: {cassette_path}");
         }
         (ServiceContext::replaying(Path::new(cassette_path))?, None)
-    } else if is_recording {
+    } else if record_val.is_some() {
         if cli.verbose {
             eprintln!("Recording mode enabled");
         }
-        let (ctx, session) = ServiceContext::recording(provider, &config)?;
+        let (ctx, session) =
+            ServiceContext::recording(provider, &config, cassette_path.as_deref())?;
         (ctx, Some(session))
     } else {
         (ServiceContext::live(provider, &config)?, None)
     };
 
     // Generate
-    let response = ctx.generator.generate(&request).await?;
+    let result = ctx.generator.generate(&request).await;
+
+    // Drop the context to release the Arc reference before finishing the recording
+    drop(ctx);
+
+    // Always finish recording, even if generation failed
+    if let Some(session) = recording_session {
+        match session.finish() {
+            Ok(path) => eprintln!("Cassette saved: {}", path.display()),
+            Err(e) => eprintln!("Warning: failed to save cassette: {e}"),
+        }
+    }
+
+    let response = result?;
 
     // Save images
     for (i, image) in response.images.iter().enumerate() {
@@ -120,14 +138,6 @@ async fn run(cli: Cli) -> Result<(), error::ImageError> {
 
         save_image(&image.data, &image.mime_type, &effective_format, &output_path)?;
         eprintln!("Saved: {}", output_path.display());
-    }
-
-    // Finish recording if active
-    if let Some(session) = recording_session {
-        match session.finish() {
-            Ok(path) => eprintln!("Cassette saved: {}", path.display()),
-            Err(e) => eprintln!("Warning: failed to save cassette: {e}"),
-        }
     }
 
     Ok(())

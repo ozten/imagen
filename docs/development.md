@@ -124,6 +124,5 @@ tests/
 ├── cli.rs           # CLI argument and output tests
 └── record_replay.rs # Cassette replay integration tests
 
-test_fixtures/
-└── cassettes/       # Recorded API interactions for tests
+test_fixtures/               # Recorded cassettes for replay tests
 ```

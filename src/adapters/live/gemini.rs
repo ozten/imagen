@@ -79,9 +79,14 @@ impl ImageGenerator for GeminiGenerator {
             }
 
             if images.is_empty() {
+                let truncated = if response_text.len() > 500 {
+                    format!("{}...", &response_text[..500])
+                } else {
+                    response_text.clone()
+                };
                 return Err(ImageError::Api {
                     status: 200,
-                    message: "No images in response".into(),
+                    message: format!("No images in response. Body: {truncated}"),
                 });
             }
 
@@ -108,6 +113,7 @@ struct GeminiContent {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct GeminiPart {
     #[allow(dead_code)]
     text: Option<String>,
@@ -115,6 +121,7 @@ struct GeminiPart {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct GeminiInlineData {
     mime_type: String,
     data: String,

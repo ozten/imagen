@@ -39,15 +39,19 @@ sed -i.bak -E "0,/^version = \"[^\"]+\"/s//version = \"${VERSION}\"/" Cargo.toml
 rm -f Cargo.toml.bak
 
 # Update Cargo.lock
-cargo check --quiet
+cargo check --quiet 2>/dev/null || true
 
 # Commit + tag
 git add Cargo.toml Cargo.lock
-git commit -m "release: ${TAG}"
+if git diff --cached --quiet; then
+    echo "Version already set to ${VERSION}, skipping commit."
+else
+    git commit -m "release: ${TAG}"
+fi
 git tag "$TAG"
 
 echo ""
-echo "Created commit and tag $TAG"
+echo "Created tag $TAG"
 echo ""
 echo "Push to trigger the release build:"
 echo "  git push origin main $TAG"

@@ -25,18 +25,18 @@ Imagen uses hexagonal architecture (also called ports and adapters). The core do
 └───────────┬─────────────────────┬───────────────────┘
             │                     │
             ▼                     ▼
-┌─────────────────┐   ┌───────────────────────────────┐
-│  Live Adapters  │   │      Test Adapters            │
-│                 │   │                               │
-│  GeminiAdapter  │   │  RecordingAdapter             │
-│  OpenAIAdapter  │   │    wraps a live adapter,      │
-│                 │   │    writes interactions to     │
-│                 │   │    cassette YAML              │
-│                 │   │                               │
-│                 │   │  ReplayingAdapter             │
-│                 │   │    reads interactions from    │
-│                 │   │    cassette YAML              │
-└─────────────────┘   └───────────────────────────────┘
+┌──────────────────┐   ┌───────────────────────────────┐
+│  Live Adapters   │   │      Test Adapters            │
+│                  │   │                               │
+│  GeminiGenerator │   │  RecordingImageGenerator      │
+│  OpenAiGenerator │   │    wraps a live adapter,      │
+│                  │   │    writes interactions to     │
+│                  │   │    cassette YAML              │
+│                  │   │                               │
+│                  │   │  ReplayingImageGenerator      │
+│                  │   │    reads interactions from    │
+│                  │   │    cassette YAML              │
+└──────────────────┘   └───────────────────────────────┘
 ```
 
 ## Layers
@@ -65,17 +65,17 @@ pub trait ImageGenerator: Send + Sync {
 
 `src/adapters/live/` contains HTTP adapters for each provider:
 
-- **`GeminiAdapter`** — calls the Gemini image generation API; handles base64-encoded responses
-- **`OpenAIAdapter`** — calls the OpenAI images API; translates aspect ratios to pixel dimensions
+- **`GeminiGenerator`** — calls the Gemini image generation API; handles base64-encoded `inlineData` responses
+- **`OpenAiGenerator`** — calls the OpenAI images API; translates aspect ratios to pixel dimensions
 
-Both adapters read API keys from the config or environment and build `reqwest` HTTP requests.
+Both adapters receive API keys via `ServiceContext` and build `reqwest` HTTP requests.
 
 ### Test Adapters
 
 `src/adapters/recording/` and `src/adapters/replaying/` implement cassette-based testing:
 
-- **`RecordingAdapter`** — wraps any `ImageGenerator`, passes requests through to the inner adapter, and writes each request/response pair to a cassette YAML file
-- **`ReplayingAdapter`** — reads a cassette YAML file and returns pre-recorded responses without any network I/O
+- **`RecordingImageGenerator`** — wraps any `ImageGenerator`, passes requests through to the inner adapter, and writes each request/response pair to a cassette YAML file via `CassetteRecorder`
+- **`ReplayingImageGenerator`** — reads a cassette YAML file and returns pre-recorded responses without any network I/O
 
 ### Cassette Format
 
@@ -83,11 +83,11 @@ Both adapters read API keys from the config or environment and build `reqwest` H
 
 ### Service Context
 
-`src/context.rs` wires the application together. It reads the `IMAGEN_RECORD` and `IMAGEN_REPLAY` environment variables to decide which adapter to use:
+`src/context.rs` wires the application together. It provides three constructors — `live()`, `recording()`, and `replaying()` — that `main.rs` selects based on the `IMAGEN_RECORD` and `IMAGEN_REPLAY` environment variables:
 
-- If `IMAGEN_REPLAY` is set → use `ReplayingAdapter` (no API key needed)
-- If `IMAGEN_RECORD` is set → use `RecordingAdapter` wrapping the appropriate live adapter
-- Otherwise → use the live adapter directly
+- If `IMAGEN_REPLAY` is set → `ServiceContext::replaying()` uses `ReplayingImageGenerator` (no API key needed)
+- If `IMAGEN_RECORD` is set → `ServiceContext::recording()` wraps the live adapter with `RecordingImageGenerator`
+- Otherwise → `ServiceContext::live()` uses the live adapter directly
 
 ## Design Decisions
 

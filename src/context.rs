@@ -53,6 +53,7 @@ impl ServiceContext {
                     provider: "Gemini".into(),
                     env_var: "GEMINI_API_KEY".into(),
                 })?;
+                warn_if_key_invalid(&key, "Gemini");
                 Box::new(GeminiGenerator::new(key))
             }
             Provider::OpenAi => {
@@ -60,6 +61,7 @@ impl ServiceContext {
                     provider: "OpenAI".into(),
                     env_var: "OPENAI_API_KEY".into(),
                 })?;
+                warn_if_key_invalid(&key, "OpenAI");
                 Box::new(OpenAiGenerator::new(key))
             }
         };
@@ -68,20 +70,29 @@ impl ServiceContext {
 
     /// Create a recording context that wraps a live adapter with a recorder.
     ///
+    /// If `cassette_path` is `Some`, the cassette is written to that exact path.
+    /// Otherwise a timestamped path under `.imagen/cassettes/` is auto-generated.
+    ///
     /// # Errors
     ///
     /// Returns an error if the recording session cannot be initialized.
     pub fn recording(
         provider: Provider,
         config: &Config,
+        cassette_path: Option<&Path>,
     ) -> Result<(Self, RecordingSession), ImageError> {
         let live_ctx = Self::live(provider, config)?;
 
         let timestamp = chrono::Utc::now().format("%Y-%m-%dT%H-%M-%S").to_string();
-        let output_dir = std::path::PathBuf::from(".imagen/cassettes").join(&timestamp);
-
         let commit = get_commit_hash();
-        let path = output_dir.join("image_generator.cassette.yaml");
+
+        let path = if let Some(p) = cassette_path {
+            p.to_path_buf()
+        } else {
+            let output_dir = std::path::PathBuf::from(".imagen/cassettes").join(&timestamp);
+            output_dir.join("image_generator.cassette.yaml")
+        };
+
         let recorder = Arc::new(Mutex::new(CassetteRecorder::new(
             path,
             format!("{timestamp}-image_generator"),
@@ -107,6 +118,16 @@ impl ServiceContext {
         let replayer = Arc::new(Mutex::new(replayer));
         let generator = Box::new(ReplayingImageGenerator::new(replayer));
         Ok(Self { generator })
+    }
+}
+
+/// Log a warning if an API key looks invalid.
+fn warn_if_key_invalid(key: &str, provider: &str) {
+    let trimmed = key.trim();
+    if trimmed.is_empty() {
+        eprintln!("Warning: {provider} API key is empty");
+    } else if trimmed.len() < 10 {
+        eprintln!("Warning: {provider} API key looks too short ({} chars)", trimmed.len());
     }
 }
 

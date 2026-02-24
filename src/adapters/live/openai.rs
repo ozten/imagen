@@ -79,9 +79,14 @@ impl ImageGenerator for OpenAiGenerator {
             }
 
             if images.is_empty() {
+                let truncated = if response_text.len() > 500 {
+                    format!("{}...", &response_text[..500])
+                } else {
+                    response_text.clone()
+                };
                 return Err(ImageError::Api {
                     status: 200,
-                    message: "No images in response".into(),
+                    message: format!("No images in response. Body: {truncated}"),
                 });
             }
 
