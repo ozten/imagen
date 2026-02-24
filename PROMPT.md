@@ -167,6 +167,8 @@ Record improvements as you work — don't batch them to the end of the session.
 
 ## Analysis Session
 
+> **CRITICAL (R44): Turn 1 MUST be tool calls.** Emit the python3 comprehensive session parse script AND `blacksmith improve list` in ONE parallel turn. Turn 1 narration is a Rule A violation.
+
 Analysis sessions parse a past session's `.jsonl` file and file improvements. They do NOT follow the normal Execution Protocol.
 
 **Skip Context Loading entirely.** Do NOT read MEMORY.md or PROMPT.md — all context is in the task prompt.
