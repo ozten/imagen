@@ -165,6 +165,96 @@ blacksmith improve add "Always check Cargo.toml when adding new modules" \
 
 Record improvements as you work — don't batch them to the end of the session.
 
+## Analysis Session
+
+Analysis sessions parse a past session's `.jsonl` file and file improvements. They do NOT follow the normal Execution Protocol.
+
+**Skip Context Loading entirely.** Do NOT read MEMORY.md or PROMPT.md — all context is in the task prompt.
+
+**Turn 1 is mandatory**: emit TWO parallel tool calls — session parse script + `blacksmith improve list`. No narration-only turns allowed. All tool calls must be parallel (0 parallel turns = Rule A violation).
+
+### Step 1: Load metrics + improvement list (ONE parallel turn, TWO tool calls)
+
+Run the python3 one-pass script (Step 2) AND `blacksmith improve list` in the same turn. Check existing improvements to avoid duplicates before filing new ones.
+
+### Step 2: Parse session in ONE pass
+
+Use this template. Do NOT re-read the file incrementally — one script, one Bash call:
+
+```python
+import json, sys
+from collections import defaultdict
+
+SESSION = ".blacksmith/sessions/<N>.jsonl"  # replace <N> with actual session number
+
+with open(SESSION) as f:
+    lines = [json.loads(l) for l in f if l.strip()]
+
+# Aggregate assistant turns by message ID (same ID can span multiple lines)
+turns = defaultdict(list)   # message_id -> [content_block, ...]
+turn_order = []
+
+for msg in lines:
+    if msg.get("type") == "assistant":
+        m = msg.get("message", {})
+        mid = m.get("id", "unknown")
+        if mid not in turns:
+            turn_order.append(mid)
+        turns[mid].extend(m.get("content", []))
+
+# Compute metrics
+total_messages   = len(lines)
+total_assistant  = len(turn_order)
+tool_call_turns  = 0
+narration_only   = 0
+parallel_tool    = 0
+tool_calls_by_name = defaultdict(int)
+sample_narrations  = []
+
+for mid in turn_order:
+    blocks     = turns[mid]
+    tool_use   = [b for b in blocks if b.get("type") == "tool_use"]
+    text_only  = [b for b in blocks if b.get("type") == "text"]
+    if tool_use:
+        tool_call_turns += 1
+        for b in tool_use:
+            tool_calls_by_name[b.get("name", "unknown")] += 1
+        if len(tool_use) > 1:
+            parallel_tool += 1
+    elif text_only:
+        narration_only += 1
+        if len(sample_narrations) < 3:
+            sample_narrations.append(text_only[0]["text"][:120])
+
+narration_ratio = narration_only / total_assistant if total_assistant else 0.0
+
+print(f"total_messages:      {total_messages}")
+print(f"total_assistant:     {total_assistant}")
+print(f"tool_call_turns:     {tool_call_turns}")
+print(f"narration_only:      {narration_only}")
+print(f"narration_ratio:     {narration_ratio:.1%}")
+print(f"parallel_tool_turns: {parallel_tool}")
+print(f"tool_calls_by_name:  {dict(tool_calls_by_name)}")
+print(f"sample_narrations:   {sample_narrations}")
+```
+
+### Step 3: Identify improvements
+
+Compare metrics against targets:
+- narration_ratio > 10% → Rule B violation, note specific narration texts
+- parallel_tool_turns == 0 → Rule A violation (session had zero parallel calls)
+- narration_ratio == 0% AND parallel_tool_turns > 0 → healthy session, record nothing
+
+### Step 4: Dismiss resolved improvements
+
+If any `blacksmith improve list` entries are already addressed by recent PROMPT.md changes, call `blacksmith improve dismiss <id>` for each in ONE parallel turn.
+
+### Step 5: File new improvements
+
+Emit exactly N `blacksmith improve add` calls in ONE parallel turn — one per insight found. Do not batch them to the end; do not file more than 3 per analysis session.
+
+---
+
 ## Verification
 
 Before closing a task, run these commands and ensure they pass:
