@@ -30,7 +30,12 @@ impl ImageGenerator for OpenAiGenerator {
     fn generate(&self, request: &ImageRequest) -> GenerateFuture<'_> {
         let request = request.clone();
         Box::pin(async move {
-            let size = aspect_ratio_to_openai_size(&request.aspect_ratio);
+            // OpenAI only supports 1K-range sizes (1024px); for 2K/4K use "auto".
+            let size = if request.size == "1K" {
+                aspect_ratio_to_openai_size(&request.aspect_ratio)
+            } else {
+                "auto"
+            };
 
             let body = serde_json::json!({
                 "model": request.model,
