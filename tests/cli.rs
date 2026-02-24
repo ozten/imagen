@@ -7,7 +7,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 
 fn cmd() -> Command {
-    Command::cargo_bin("imagen").unwrap()
+    assert_cmd::cargo::cargo_bin_cmd!("imagen")
 }
 
 #[test]

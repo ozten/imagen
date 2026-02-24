@@ -9,10 +9,10 @@ use predicates::prelude::*;
 use std::path::PathBuf;
 
 fn cmd() -> Command {
-    Command::cargo_bin("imagen").unwrap()
+    assert_cmd::cargo::cargo_bin_cmd!("imagen")
 }
 
-/// Absolute path to the test_fixtures directory.
+/// Absolute path to the `test_fixtures` directory.
 fn fixtures_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test_fixtures")
 }
