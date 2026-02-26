@@ -11,7 +11,8 @@ pub enum Provider {
 
 /// Short name aliases for popular models.
 const ALIASES: &[(&str, &str)] = &[
-    ("nano-banana", "gemini-3-pro-image-preview"),
+    ("nano-banana", "gemini-3.1-flash-image-preview"),
+    ("nano-banana-pro", "gemini-3-pro-image-preview"),
     ("gpt-1.5", "gpt-image-1.5"),
     ("gpt-1", "gpt-image-1"),
     ("gpt-1-mini", "gpt-image-1-mini"),
@@ -49,7 +50,12 @@ mod tests {
 
     #[test]
     fn resolve_nano_banana() {
-        assert_eq!(resolve_model("nano-banana"), "gemini-3-pro-image-preview");
+        assert_eq!(resolve_model("nano-banana"), "gemini-3.1-flash-image-preview");
+    }
+
+    #[test]
+    fn resolve_nano_banana_pro() {
+        assert_eq!(resolve_model("nano-banana-pro"), "gemini-3-pro-image-preview");
     }
 
     #[test]

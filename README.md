@@ -55,7 +55,8 @@ imagen -p my-prompt.txt -f png -a 16:9
 
 | Short Name | Resolved Model | Provider |
 |---|---|---|
-| `nano-banana` (default) | `gemini-3-pro-image-preview` | Gemini |
+| `nano-banana` (default) | `gemini-3.1-flash-image-preview` | Gemini |
+| `nano-banana-pro` | `gemini-3-pro-image-preview` | Gemini |
 | `gpt-1.5` | `gpt-image-1.5` | OpenAI |
 | `gpt-1` | `gpt-image-1` | OpenAI |
 | `gpt-1-mini` | `gpt-image-1-mini` | OpenAI |
@@ -75,6 +76,7 @@ Options:
   -m, --model <MODEL>          Model name [default: nano-banana]
   -a, --aspect-ratio <RATIO>   Aspect ratio [default: 1:1]
   -s, --size <SIZE>            Image size: 1K, 2K, 4K [default: 1K]
+  -t, --thinking <LEVEL>       Thinking level (Gemini): none, minimal, low, medium, high
   -q, --quality <QUALITY>      Quality: auto, low, medium, high [default: auto]
   -f, --format <FORMAT>        Output format: jpeg, png, webp [default: jpeg]
   -o, --output <PATH>          Output file path [default: auto-generated]

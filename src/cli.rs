@@ -46,6 +46,10 @@ pub struct Cli {
     #[arg(long)]
     pub config: Option<String>,
 
+    /// Thinking level (Gemini only): none, minimal, low, medium, high.
+    #[arg(short, long)]
+    pub thinking: Option<String>,
+
     /// Verbose output.
     #[arg(short, long)]
     pub verbose: bool,

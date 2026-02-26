@@ -31,17 +31,25 @@ impl ImageGenerator for GeminiGenerator {
         Box::pin(async move {
             let url = format!("{GEMINI_API_BASE}/{}:generateContent", request.model);
 
+            let mut generation_config = serde_json::json!({
+                "responseModalities": ["IMAGE"],
+                "imageConfig": {
+                    "aspectRatio": request.aspect_ratio,
+                    "imageSize": request.size,
+                }
+            });
+
+            if let Some(ref thinking) = request.thinking {
+                generation_config["thinkingConfig"] = serde_json::json!({
+                    "thinkingLevel": thinking.to_uppercase()
+                });
+            }
+
             let body = serde_json::json!({
                 "contents": [{
                     "parts": [{"text": request.prompt}]
                 }],
-                "generationConfig": {
-                    "responseModalities": ["IMAGE"],
-                    "imageConfig": {
-                        "aspectRatio": request.aspect_ratio,
-                        "imageSize": request.size,
-                    }
-                }
+                "generationConfig": generation_config
             });
 
             let response = self

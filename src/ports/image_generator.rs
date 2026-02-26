@@ -10,7 +10,7 @@ use crate::error::ImageError;
 /// A request to generate images.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImageRequest {
-    /// The resolved model identifier (e.g., `"gemini-3-pro-image-preview"`).
+    /// The resolved model identifier (e.g., `"gemini-3.1-flash-image-preview"`).
     pub model: String,
     /// The text prompt describing the desired image.
     pub prompt: String,
@@ -24,6 +24,9 @@ pub struct ImageRequest {
     pub format: String,
     /// Number of images to generate.
     pub count: u32,
+    /// Thinking level for Gemini models (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`).
+    #[serde(default)]
+    pub thinking: Option<String>,
 }
 
 /// A single generated image.
@@ -78,18 +81,37 @@ mod tests {
     #[test]
     fn image_request_serialization() {
         let request = ImageRequest {
-            model: "gemini-3-pro-image-preview".into(),
+            model: "gemini-3.1-flash-image-preview".into(),
             prompt: "a cat".into(),
             aspect_ratio: "1:1".into(),
             size: "1K".into(),
             quality: "auto".into(),
             format: "jpeg".into(),
             count: 1,
+            thinking: None,
         };
         let json = serde_json::to_string(&request).unwrap();
         let deserialized: ImageRequest = serde_json::from_str(&json).unwrap();
-        assert_eq!(deserialized.model, "gemini-3-pro-image-preview");
+        assert_eq!(deserialized.model, "gemini-3.1-flash-image-preview");
         assert_eq!(deserialized.prompt, "a cat");
+        assert!(deserialized.thinking.is_none());
+    }
+
+    #[test]
+    fn image_request_with_thinking() {
+        let request = ImageRequest {
+            model: "gemini-3.1-flash-image-preview".into(),
+            prompt: "a cat".into(),
+            aspect_ratio: "1:1".into(),
+            size: "1K".into(),
+            quality: "auto".into(),
+            format: "jpeg".into(),
+            count: 1,
+            thinking: Some("medium".into()),
+        };
+        let json = serde_json::to_string(&request).unwrap();
+        let deserialized: ImageRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.thinking.as_deref(), Some("medium"));
     }
 
     #[test]

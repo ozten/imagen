@@ -74,6 +74,23 @@ pub fn validate_format(format: &str) -> Result<(), String> {
     }
 }
 
+/// Validate the thinking level parameter (Gemini only).
+///
+/// # Errors
+///
+/// Returns an error if the thinking level is not recognized.
+pub fn validate_thinking(thinking: &str, provider: Provider) -> Result<(), String> {
+    if provider != Provider::Gemini {
+        return Err("--thinking is only supported for Gemini models".to_string());
+    }
+    match thinking {
+        "none" | "minimal" | "low" | "medium" | "high" => Ok(()),
+        _ => Err(format!(
+            "Unsupported thinking level '{thinking}'. Valid: none, minimal, low, medium, high"
+        )),
+    }
+}
+
 /// Get the file extension for an output format.
 #[must_use]
 pub fn format_extension(format: &str) -> &'static str {
@@ -166,6 +183,25 @@ mod tests {
     fn validate_format_invalid() {
         assert!(validate_format("gif").is_err());
         assert!(validate_format("bmp").is_err());
+    }
+
+    #[test]
+    fn validate_thinking_valid() {
+        assert!(validate_thinking("none", Provider::Gemini).is_ok());
+        assert!(validate_thinking("minimal", Provider::Gemini).is_ok());
+        assert!(validate_thinking("low", Provider::Gemini).is_ok());
+        assert!(validate_thinking("medium", Provider::Gemini).is_ok());
+        assert!(validate_thinking("high", Provider::Gemini).is_ok());
+    }
+
+    #[test]
+    fn validate_thinking_invalid() {
+        assert!(validate_thinking("ultra", Provider::Gemini).is_err());
+    }
+
+    #[test]
+    fn validate_thinking_wrong_provider() {
+        assert!(validate_thinking("medium", Provider::OpenAi).is_err());
     }
 
     #[test]

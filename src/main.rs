@@ -21,7 +21,9 @@ use crate::config::{Config, DefaultsConfig};
 use crate::context::ServiceContext;
 use crate::model::{detect_provider, resolve_model};
 use crate::output::{resolve_output_path, save_image};
-use crate::params::{validate_aspect_ratio, validate_format, validate_quality, validate_size};
+use crate::params::{
+    validate_aspect_ratio, validate_format, validate_quality, validate_size, validate_thinking,
+};
 use crate::ports::ImageRequest;
 
 #[tokio::main]
@@ -71,6 +73,9 @@ async fn run(cli: Cli) -> Result<(), error::ImageError> {
     validate_size(&effective_size).map_err(error::ImageError::InvalidArgument)?;
     validate_quality(&effective_quality).map_err(error::ImageError::InvalidArgument)?;
     validate_format(&effective_format).map_err(error::ImageError::InvalidArgument)?;
+    if let Some(ref thinking) = cli.thinking {
+        validate_thinking(thinking, provider).map_err(error::ImageError::InvalidArgument)?;
+    }
 
     // Build request
     let request = ImageRequest {
@@ -81,6 +86,7 @@ async fn run(cli: Cli) -> Result<(), error::ImageError> {
         quality: effective_quality.clone(),
         format: effective_format.clone(),
         count: cli.count,
+        thinking: cli.thinking.clone(),
     };
 
     // Create context based on mode (live / recording / replaying)
