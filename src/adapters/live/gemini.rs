@@ -73,7 +73,11 @@ impl ImageGenerator for GeminiGenerator {
 
             let mut images = Vec::new();
             for candidate in parsed.candidates {
-                for part in candidate.content.parts {
+                let parts = match candidate.content {
+                    Some(c) => c.parts,
+                    None => continue,
+                };
+                for part in parts {
                     if let Some(inline) = part.inline_data {
                         let data = base64::engine::general_purpose::STANDARD
                             .decode(&inline.data)
@@ -112,11 +116,13 @@ struct GeminiResponse {
 
 #[derive(Deserialize)]
 struct GeminiCandidate {
-    content: GeminiContent,
+    #[serde(default)]
+    content: Option<GeminiContent>,
 }
 
 #[derive(Deserialize)]
 struct GeminiContent {
+    #[serde(default)]
     parts: Vec<GeminiPart>,
 }
 
