@@ -22,9 +22,10 @@ use crate::context::ServiceContext;
 use crate::model::{detect_provider, resolve_model};
 use crate::output::{resolve_output_path, save_image};
 use crate::params::{
-    validate_aspect_ratio, validate_format, validate_quality, validate_size, validate_thinking,
+    mime_type_from_extension, validate_aspect_ratio, validate_background, validate_format,
+    validate_input_paths, validate_quality, validate_size, validate_thinking,
 };
-use crate::ports::ImageRequest;
+use crate::ports::{ImageRequest, InputImage};
 
 #[tokio::main]
 async fn main() {
@@ -76,6 +77,16 @@ async fn run(cli: Cli) -> Result<(), error::ImageError> {
     if let Some(ref thinking) = cli.thinking {
         validate_thinking(thinking, provider).map_err(error::ImageError::InvalidArgument)?;
     }
+    if let Some(ref bg) = cli.background {
+        validate_background(bg, &effective_format, provider)
+            .map_err(error::ImageError::InvalidArgument)?;
+    }
+    if !cli.input.is_empty() {
+        validate_input_paths(&cli.input).map_err(error::ImageError::InvalidArgument)?;
+    }
+
+    // Read input images from disk
+    let input_images = read_input_images(&cli.input)?;
 
     // Build request
     let request = ImageRequest {
@@ -87,6 +98,8 @@ async fn run(cli: Cli) -> Result<(), error::ImageError> {
         format: effective_format.clone(),
         count: cli.count,
         thinking: cli.thinking.clone(),
+        input_images,
+        background: cli.background.clone(),
     };
 
     // Create context based on mode (live / recording / replaying)
@@ -147,6 +160,25 @@ async fn run(cli: Cli) -> Result<(), error::ImageError> {
     }
 
     Ok(())
+}
+
+/// Read input image files from disk into `InputImage` structs.
+fn read_input_images(paths: &[String]) -> Result<Vec<InputImage>, error::ImageError> {
+    paths
+        .iter()
+        .map(|path| {
+            let data = std::fs::read(path).map_err(error::ImageError::Io)?;
+            let mime_type = mime_type_from_extension(path)
+                .map_err(error::ImageError::InvalidArgument)?
+                .to_string();
+            let filename = Path::new(path)
+                .file_name()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
+            Ok(InputImage { data, mime_type, filename })
+        })
+        .collect()
 }
 
 /// Returns `cli_val` if it differs from `cli_default` (the user explicitly passed the flag),

@@ -53,3 +53,38 @@ fn invalid_quality_exits_with_error() {
         .failure()
         .stderr(predicate::str::contains("Unsupported quality"));
 }
+
+#[test]
+fn background_with_gemini_exits_with_error() {
+    cmd()
+        .args(["--model", "nano-banana", "--background", "transparent", "a cat"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("only supported for OpenAI"));
+}
+
+#[test]
+fn background_transparent_with_jpeg_exits_with_error() {
+    cmd()
+        .args([
+            "--model",
+            "gpt-1",
+            "--background",
+            "transparent",
+            "--format",
+            "jpeg",
+            "a cat",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("alpha"));
+}
+
+#[test]
+fn missing_input_file_exits_with_error() {
+    cmd()
+        .args(["--model", "nano-banana", "--input", "/nonexistent/img.png", "a cat"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("not found"));
+}

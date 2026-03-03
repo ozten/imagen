@@ -5,4 +5,4 @@
 
 pub mod image_generator;
 
-pub use image_generator::{ImageGenerator, ImageRequest};
+pub use image_generator::{ImageGenerator, ImageRequest, InputImage};

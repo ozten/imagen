@@ -50,6 +50,14 @@ pub struct Cli {
     #[arg(short, long)]
     pub thinking: Option<String>,
 
+    /// Input image file paths for image editing (repeatable).
+    #[arg(short, long = "input", num_args = 1)]
+    pub input: Vec<String>,
+
+    /// Background mode: auto, transparent (`OpenAI` only).
+    #[arg(short, long)]
+    pub background: Option<String>,
+
     /// Verbose output.
     #[arg(short, long)]
     pub verbose: bool,

@@ -7,6 +7,18 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::ImageError;
 
+/// An input/reference image provided by the user.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InputImage {
+    /// Raw image bytes.
+    #[serde(with = "base64_bytes")]
+    pub data: Vec<u8>,
+    /// MIME type (e.g., `"image/png"`).
+    pub mime_type: String,
+    /// Original filename (e.g., `"photo.png"`).
+    pub filename: String,
+}
+
 /// A request to generate images.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImageRequest {
@@ -27,6 +39,12 @@ pub struct ImageRequest {
     /// Thinking level for Gemini models (`"none"`, `"minimal"`, `"low"`, `"medium"`, `"high"`).
     #[serde(default)]
     pub thinking: Option<String>,
+    /// Input/reference images for image editing.
+    #[serde(default)]
+    pub input_images: Vec<InputImage>,
+    /// Background mode (`"auto"`, `"transparent"`) — `OpenAI` only.
+    #[serde(default)]
+    pub background: Option<String>,
 }
 
 /// A single generated image.
@@ -89,12 +107,16 @@ mod tests {
             format: "jpeg".into(),
             count: 1,
             thinking: None,
+            input_images: vec![],
+            background: None,
         };
         let json = serde_json::to_string(&request).unwrap();
         let deserialized: ImageRequest = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.model, "gemini-3.1-flash-image-preview");
         assert_eq!(deserialized.prompt, "a cat");
         assert!(deserialized.thinking.is_none());
+        assert!(deserialized.input_images.is_empty());
+        assert!(deserialized.background.is_none());
     }
 
     #[test]
@@ -108,10 +130,48 @@ mod tests {
             format: "jpeg".into(),
             count: 1,
             thinking: Some("medium".into()),
+            input_images: vec![],
+            background: None,
         };
         let json = serde_json::to_string(&request).unwrap();
         let deserialized: ImageRequest = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.thinking.as_deref(), Some("medium"));
+    }
+
+    #[test]
+    fn image_request_with_input_images() {
+        let request = ImageRequest {
+            model: "gpt-image-1".into(),
+            prompt: "remove background".into(),
+            aspect_ratio: "1:1".into(),
+            size: "1K".into(),
+            quality: "auto".into(),
+            format: "png".into(),
+            count: 1,
+            thinking: None,
+            input_images: vec![InputImage {
+                data: vec![0xFF, 0xD8, 0xFF, 0xE0],
+                mime_type: "image/jpeg".into(),
+                filename: "photo.jpg".into(),
+            }],
+            background: Some("transparent".into()),
+        };
+        let json = serde_json::to_string(&request).unwrap();
+        let deserialized: ImageRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.input_images.len(), 1);
+        assert_eq!(deserialized.input_images[0].mime_type, "image/jpeg");
+        assert_eq!(deserialized.input_images[0].filename, "photo.jpg");
+        assert_eq!(deserialized.background.as_deref(), Some("transparent"));
+    }
+
+    #[test]
+    fn image_request_backward_compat_without_new_fields() {
+        // Old cassettes won't have input_images or background — serde(default) handles it.
+        let json = r#"{"model":"gemini-3.1-flash-image-preview","prompt":"a cat","aspect_ratio":"1:1","size":"1K","quality":"auto","format":"jpeg","count":1}"#;
+        let deserialized: ImageRequest = serde_json::from_str(json).unwrap();
+        assert!(deserialized.input_images.is_empty());
+        assert!(deserialized.background.is_none());
+        assert!(deserialized.thinking.is_none());
     }
 
     #[test]

@@ -91,6 +91,77 @@ pub fn validate_thinking(thinking: &str, provider: Provider) -> Result<(), Strin
     }
 }
 
+/// Validate the background parameter (`OpenAI` only).
+///
+/// # Errors
+///
+/// Returns an error if the value is unrecognized, the provider is Gemini,
+/// or transparent background is combined with jpeg format.
+pub fn validate_background(
+    background: &str,
+    format: &str,
+    provider: Provider,
+) -> Result<(), String> {
+    if provider == Provider::Gemini {
+        return Err("--background is only supported for OpenAI models".to_string());
+    }
+    match background {
+        "auto" | "transparent" => {}
+        _ => {
+            return Err(format!(
+                "Unsupported background '{background}'. Valid: auto, transparent"
+            ))
+        }
+    }
+    if background == "transparent" && format == "jpeg" {
+        return Err(
+            "transparent background requires a format that supports alpha (png or webp, not jpeg)"
+                .to_string(),
+        );
+    }
+    Ok(())
+}
+
+/// Validate that input image paths exist and have recognized image extensions.
+///
+/// # Errors
+///
+/// Returns an error if a file does not exist or has an unrecognized extension.
+pub fn validate_input_paths(paths: &[String]) -> Result<(), String> {
+    for path in paths {
+        let p = std::path::Path::new(path);
+        if !p.exists() {
+            return Err(format!("Input image not found: {path}"));
+        }
+        mime_type_from_extension(path).map_err(|_| {
+            format!(
+                "Unrecognized image extension for '{path}'. Supported: png, jpg, jpeg, webp, gif"
+            )
+        })?;
+    }
+    Ok(())
+}
+
+/// Return the MIME type for a file path based on its extension.
+///
+/// # Errors
+///
+/// Returns an error if the extension is not a recognized image type.
+pub fn mime_type_from_extension(path: &str) -> Result<&'static str, String> {
+    let ext = std::path::Path::new(path)
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    match ext.as_str() {
+        "png" => Ok("image/png"),
+        "jpg" | "jpeg" => Ok("image/jpeg"),
+        "webp" => Ok("image/webp"),
+        "gif" => Ok("image/gif"),
+        _ => Err(format!("Unrecognized image extension: .{ext}")),
+    }
+}
+
 /// Get the file extension for an output format.
 #[must_use]
 pub fn format_extension(format: &str) -> &'static str {
@@ -209,5 +280,60 @@ mod tests {
         assert_eq!(format_extension("jpeg"), "jpg");
         assert_eq!(format_extension("png"), "png");
         assert_eq!(format_extension("webp"), "webp");
+    }
+
+    #[test]
+    fn validate_background_valid() {
+        assert!(validate_background("auto", "png", Provider::OpenAi).is_ok());
+        assert!(validate_background("transparent", "png", Provider::OpenAi).is_ok());
+        assert!(validate_background("transparent", "webp", Provider::OpenAi).is_ok());
+    }
+
+    #[test]
+    fn validate_background_gemini_rejected() {
+        let err = validate_background("auto", "png", Provider::Gemini).unwrap_err();
+        assert!(err.contains("only supported for OpenAI"));
+    }
+
+    #[test]
+    fn validate_background_invalid_value() {
+        let err = validate_background("none", "png", Provider::OpenAi).unwrap_err();
+        assert!(err.contains("Unsupported background"));
+    }
+
+    #[test]
+    fn validate_background_transparent_jpeg_rejected() {
+        let err = validate_background("transparent", "jpeg", Provider::OpenAi).unwrap_err();
+        assert!(err.contains("alpha"));
+    }
+
+    #[test]
+    fn validate_input_paths_missing_file() {
+        let err = validate_input_paths(&["/nonexistent/image.png".to_string()]).unwrap_err();
+        assert!(err.contains("not found"));
+    }
+
+    #[test]
+    fn validate_input_paths_bad_extension() {
+        let tmp = std::env::temp_dir().join("imagen_test_bad_ext.txt");
+        std::fs::write(&tmp, "not an image").unwrap();
+        let err = validate_input_paths(&[tmp.to_string_lossy().to_string()]).unwrap_err();
+        assert!(err.contains("Unrecognized image extension"));
+        let _ = std::fs::remove_file(&tmp);
+    }
+
+    #[test]
+    fn mime_type_from_extension_valid() {
+        assert_eq!(mime_type_from_extension("photo.png").unwrap(), "image/png");
+        assert_eq!(mime_type_from_extension("photo.jpg").unwrap(), "image/jpeg");
+        assert_eq!(mime_type_from_extension("photo.jpeg").unwrap(), "image/jpeg");
+        assert_eq!(mime_type_from_extension("photo.webp").unwrap(), "image/webp");
+        assert_eq!(mime_type_from_extension("photo.gif").unwrap(), "image/gif");
+    }
+
+    #[test]
+    fn mime_type_from_extension_invalid() {
+        assert!(mime_type_from_extension("photo.bmp").is_err());
+        assert!(mime_type_from_extension("noext").is_err());
     }
 }

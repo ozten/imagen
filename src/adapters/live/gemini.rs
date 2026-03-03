@@ -45,9 +45,21 @@ impl ImageGenerator for GeminiGenerator {
                 });
             }
 
+            // Build parts: text prompt + any inline image data
+            let mut parts = vec![serde_json::json!({"text": request.prompt})];
+            for img in &request.input_images {
+                let b64 = base64::engine::general_purpose::STANDARD.encode(&img.data);
+                parts.push(serde_json::json!({
+                    "inlineData": {
+                        "mimeType": img.mime_type,
+                        "data": b64
+                    }
+                }));
+            }
+
             let body = serde_json::json!({
                 "contents": [{
-                    "parts": [{"text": request.prompt}]
+                    "parts": parts
                 }],
                 "generationConfig": generation_config
             });
